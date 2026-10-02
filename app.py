@@ -41,9 +41,12 @@ def a_excel(df: pd.DataFrame) -> bytes:
     return buf.getvalue()
 
 
+from src import etl
+
 if not DB.exists():
-    st.error("No existe la base. Corre primero:  `python -m src.generar_exceles`  y  `python -m src.etl`")
-    st.stop()
+    with st.spinner("Generando base de datos por primera vez..."):
+        etl.ejecutar(verbose=False)
+    st.rerun()
 
 st.title("📋 Centralizador de trámites")
 st.caption("Datos de demostración 100% sintéticos. Los ciudadanos aparecen seudonimizados.")
