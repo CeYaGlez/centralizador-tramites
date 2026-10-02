@@ -1,109 +1,63 @@
-# 📋 Centralizador de trámites
+# 📋 Centralizador de Trámites
 
-Un programa que agarra **varios archivos de Excel desordenados** (donde se anotan los trámites
-que atiende cada oficina) y los convierte en **una sola base de datos limpia y ordenada** que
-cualquier persona puede consultar desde una **página web**, sin saber programar.
+> **ETL en Python que convierte Excel desordenados de oficinas de gobierno en una base de datos limpia, consultable desde una app web sin saber SQL.**
 
-> ⚠️ **Todos los datos son inventados.** El programa los genera solo, imitando los errores que
-> suelen tener los archivos reales de las oficinas. No se usó información de ninguna dependencia.
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.50+-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![pytest](https://img.shields.io/badge/tests-40%20passing-0A9EDC?logo=pytest&logoColor=white)](tests/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+🔗 **Demo en vivo:** [centralizador-tramites.streamlit.app](https://centralizador-tramites.streamlit.app/)
+
+> ⚠️ **Todos los datos son inventados.** El programa los genera solo, imitando los errores que suelen tener los archivos reales de las oficinas. No se usó información de ninguna dependencia.
 
 ---
 
-## 🧠 Antes de empezar: glosario para no técnicos
+## 🖼️ Vista previa
 
-Si nunca has programado, esta sección es para ti. Aquí explico las palabras raras que van a
-aparecer más adelante, con ejemplos cotidianos.
+![Pestaña Consulta](docs/img/consulta.png)
+![Pestaña Estadística](docs/img/estadistica.png)
+![Pestaña Calidad de datos](docs/img/calidad.png)
 
-### ¿Qué es un "ETL"?
-Son las siglas de **Extract, Transform, Load** (Extraer, Transformar, Cargar). Es como lavar
-ropa:
+---
 
-1. **Extraer** → agarras la ropa sucia del cesto (leer los Excel).
-2. **Transformar** → la lavas, la secas y la doblas (limpiar y ordenar los datos).
-3. **Cargar** → la guardas en el clóset (meter todo a una base de datos limpia).
+## 📑 Tabla de contenidos
 
-Es el proceso que hace este proyecto: agarra los Excel sucios y los deja impecables en un solo lugar.
+- [Demo en vivo](#-demo-en-vivo)
+- [El problema](#-el-problema-que-resuelve)
+- [La solución](#-la-solución)
+- [Resultados con los datos de prueba](#-qué-vas-a-ver-cuando-corras-todo)
+- [Cómo instalarlo y correrlo](#-cómo-instalarlo-y-correrlo)
+- [Estructura del proyecto](#-estructura-del-proyecto)
+- [Decisiones importantes](#-decisiones-importantes-y-por-qué)
+- [Limitaciones](#-limitaciones-lo-que-este-prototipo-todavía-no-hace)
+- [Siguientes pasos](#-siguientes-pasos)
+- [Glosario para no técnicos](#-antes-de-empezar-glosario-para-no-técnicos)
+- [Comandos de referencia rápida](#-bonus-comandos-de-referencia-rápida)
+- [Preguntas frecuentes](#-preguntas-frecuentes)
 
-### ¿Qué es "SQL"?
-Es el idioma que hablan las **bases de datos**. Una base de datos es como un archivador gigante
-con cajones y carpetas. SQL es el idioma que usas para pedirle cosas:
+---
 
-- *"Dame todos los trámites de marzo"*
-- *"¿Cuántos trámites hizo Ana López?"*
-- *"¿Qué día hubo más trabajo?"*
+## 🚀 Demo en vivo
 
-En este proyecto, **tú no necesitas escribir SQL**: la página web ya trae los filtros listos.
+Prueba la aplicación **sin instalar nada**:
 
-### ¿Qué es "SQLite"?
-Es un **tipo de base de datos muy ligera**, que vive en un solo archivo (como un Excel, pero más
-poderoso). Es perfecta para proyectos pequeños. El archivo se llama `tramites.db` y se genera
-solo cuando corres el ETL.
+👉 **[centralizador-tramites.streamlit.app](https://centralizador-tramites.streamlit.app/)**
 
-### ¿Qué es "3FN" (Tercera Forma Normal)?
-Es una regla para guardar datos **sin repetir información**. Ejemplo:
+Cosas que puedes hacer en la app:
 
-- ❌ **Mal (sin 3FN):** en cada fila escribes "Pago de predial", "pago de predial", "PAGO PREDIAL".
-  Repites el nombre mil veces y cualquier error de dedo genera una categoría nueva.
-- ✅ **Bien (con 3FN):** tienes una tablita aparte que dice `1 = Pago de predial`, y en cada fila
-  solo guardas el número `1`. Si mañana cambia el nombre, lo cambias en un solo lugar.
-
-### ¿Qué es una "interfaz web"?
-Es una **página web** que abres en tu navegador (Chrome, Safari, Edge) y con la que interactúas
-haciendo clic. Como cuando entras a tu banco en línea: llenas filtros, ves gráficas, descargas
-reportes. No necesitas saber nada de tecnología para usarla.
-
-### ¿Qué es "Streamlit"?
-Es una **herramienta de Python para hacer páginas web sin saber diseño**. En lugar de aprender
-HTML, CSS y JavaScript (los idiomas de las páginas web), escribes Python normal y Streamlit
-te arma la página con botones, tablas y gráficas automáticamente.
-
-En este proyecto, `app.py` es el archivo que describe la página, y Streamlit la "dibuja" cuando
-lo ejecutas.
-
-### ¿Qué es un "entorno virtual"?
-Imagina que tu computadora es una casa y los programas de Python son muebles. Si instalas
-programas sin orden, la casa se llena de cosas que no usas y puede haber conflictos.
-
-Un **entorno virtual** es como una **cajita aparte** dentro de la casa donde guardas solo los
-muebles (programas) que este proyecto necesita. Así:
-
-- No ensucias el resto de tu computadora.
-- Si otro proyecto necesita otra versión, no se pelean.
-- Si algo se rompe, borras la cajita y empiezas de nuevo sin afectar nada más.
-
-Se crea con el comando `python -m venv venv` (te explico abajo cómo).
-
-### ¿Qué es "GitHub"?
-Es como un **Google Drive para programadores**. Sirve para guardar tu código, ver quién cambió
-qué, y compartirlo con el mundo. Cada proyecto vive en un "repositorio".
-
-### ¿Qué es "pytest"?
-Es una herramienta que **revisa que tu programa funcione bien**. Tú escribes pruebas (por
-ejemplo: *"si le doy esta fecha, debe devolver este resultado"*) y pytest las corre todas
-automáticamente. Es como tener un inspector de calidad.
-
-### ¿Qué es un "hash"?
-
-Es una **licuadora de texto**: metes un nombre y sale una combinación sin sentido
-(ej. `María García` → `a3f7c9e1b2d4`). Tiene 3 propiedades:
-
-1. **Siempre da lo mismo** → el mismo nombre siempre produce la misma mezcla.
-2. **No se puede regresar** → de la mezcla no puedes recuperar el nombre.
-3. **Cada nombre da algo distinto** → dos personas nunca comparten mezcla.
-
-**¿Para qué sirve aquí?** Para **contar personas distintas sin saber quiénes son**.
-Si 5 trámites tienen el mismo hash, son la misma persona (sin saber su nombre).
-
-**¿Y la "sal"?** Es un **ingrediente secreto** que se agrega antes de licuar, para que
-nadie pueda adivinar el nombre probando combinaciones comunes. En producción esa sal
-debe guardarse en una variable de entorno (`TRAMITES_SAL`) y mantenerse en secreto.
+- 🎛️ **Filtrar** por rango de fechas, oficina, trámite, encargado y estatus.
+- 📊 **Ver KPIs** en tiempo real: trámites totales, personas distintas, % concluido, sin asignar.
+- 📈 **Analizar tendencias** con gráficas de barras y líneas.
+- 🧹 **Auditar la calidad** de los datos en la pestaña dedicada.
+- ⬇️ **Descargar** el resultado filtrado en CSV o Excel.
 
 ---
 
 ## 🔥 El problema que resuelve
 
-En muchas oficinas de gobierno, cada área lleva su propio Excel. Eso genera un caos cuando
-quieres juntar todo:
+En muchas oficinas de gobierno, cada área lleva su propio Excel. Eso genera un caos cuando quieres juntar todo:
 
 | Problema | Qué pasa en la práctica |
 |---|---|
@@ -129,38 +83,44 @@ El proyecto tiene 4 etapas, como una línea de producción:
 
 **Los archivos del proyecto y qué hace cada uno:**
 
-1. **`src/generar_exceles.py`** → Fabrica 4 archivos de Excel "sucios" con datos falsos, para
-   que puedas probar el sistema sin necesidad de datos reales.
-
-2. **`src/etl.py`** → El corazón del proyecto. Lee los Excel, limpia todo (fechas, nombres,
-   trámites, folios), detecta duplicados y guarda el resultado en una base de datos.
-   **Nada se pierde en silencio**: cada fila que no se pudo usar queda guardada con la razón.
-
-3. **`sql/`** → Los archivos que definen cómo se guarda la información (como los planos de un
-   edificio) y las "consultas preparadas" que la página web usa.
-
-4. **`src/estadistica.py`** → Analiza los datos: promedios, días con más trabajo, personas que
-   atendieron más trámites, y detecta "días raros" (por ejemplo, un día con 5 veces más
-   trámites de lo normal).
-
-5. **`app.py`** → La página web que ves en el navegador. Tiene filtros, gráficas, botones para
-   descargar datos y una pestaña para ver la calidad de la información.
-
-6. **`tests/`** → 40 pruebas automáticas que revisan que todo funcione bien.
+| Archivo | Qué hace |
+|---|---|
+| `src/generar_exceles.py` | Fabrica 4 archivos de Excel "sucios" con datos falsos, para probar el sistema sin datos reales. |
+| `src/etl.py` | **El corazón.** Lee los Excel, limpia todo (fechas, nombres, trámites, folios), detecta duplicados y guarda el resultado en la base de datos. **Nada se pierde en silencio**: cada fila que no se pudo usar queda guardada con la razón. |
+| `sql/schema.sql` | Los planos de la base de datos: tablas, llaves, validaciones e índices. |
+| `sql/vistas.sql` | Consultas guardadas que la app web usa. |
+| `sql/consultas_ejemplo.sql` | 5 consultas SQL de ejemplo (JOIN, GROUP BY, HAVING, subqueries). |
+| `src/estadistica.py` | Análisis estadístico: promedios, días con más trabajo y detección de "días raros" con IQR. |
+| `app.py` | La página web que ves en el navegador. |
+| `tests/test_etl.py` | 40 pruebas automáticas que revisan que todo funcione bien. |
 
 ---
 
-## 🚀 Cómo instalarlo y correrlo
+## 📊 Qué vas a ver cuando corras todo
 
-Vas a necesitar la **terminal** (en Windows se llama "Símbolo del sistema" o "PowerShell";
-en Mac/Linux es "Terminal"). No te asustes: solo vas a copiar y pegar los comandos.
+Con los datos de prueba:
+
+```
+1,633 filas leídas  →  1,591 cargadas  +  42 rechazadas con motivo
+                       (exactamente las    (40 duplicados,
+                        verdaderas)         1 fecha vacía, 1 fecha del 2062)
+```
+
+**Hallazgo estadístico:** el sistema detecta un **pico de 68 trámites el 27 de febrero de 2026** (cuando lo normal son unos 12 al día) y explica que **60 de esos son "Pago de predial" en la oficina Centro**. Esto coincide con el cierre del descuento por pronto pago que se simuló.
+
+En otras palabras: el análisis **redescubre la verdad que se sembró en los datos**. Eso valida que funciona.
+
+---
+
+## ⚙️ Cómo instalarlo y correrlo
+
+Vas a necesitar la **terminal** (en Windows se llama "Símbolo del sistema" o "PowerShell"; en Mac/Linux es "Terminal"). No te asustes: solo vas a copiar y pegar los comandos.
 
 ### Paso 0: Instalar Python
 
 Si no tienes Python instalado:
 
-- **Windows:** Descárgalo de [python.org/downloads](https://www.python.org/downloads/) y al
-  instalar **marca la casilla "Add Python to PATH"** (¡muy importante!).
+- **Windows:** Descárgalo de [python.org/downloads](https://www.python.org/downloads/) y al instalar **marca la casilla "Add Python to PATH"** (¡muy importante!).
 - **Mac:** Ya viene instalado, o instálalo con `brew install python`.
 - **Linux/WSL:** `sudo apt install python3 python3-pip python3-venv`
 
@@ -182,8 +142,7 @@ git clone https://github.com/CeYaGlez/centralizador-tramites.git
 cd centralizador-tramites
 ```
 
-**Opción B — Sin Git:** Entra a la página del repositorio en GitHub, botón verde **"Code"** →
-**"Download ZIP"**, descomprime el archivo y abre la terminal dentro de esa carpeta.
+**Opción B — Sin Git:** Entra a la página del repositorio en GitHub, botón verde **"Code"** → **"Download ZIP"**, descomprime el archivo y abre la terminal dentro de esa carpeta.
 
 ---
 
@@ -210,15 +169,13 @@ Cuando esté activo, verás `(venv)` al inicio de tu línea de comandos:
 (venv) ➜ centralizador-tramites
 ```
 
-> **Nota para Windows:** Si PowerShell te da un error de "no se puede cargar el archivo
-> porque la ejecución de scripts está deshabilitada", abre PowerShell como administrador y corre:
+> **Nota para Windows:** Si PowerShell te da un error de "no se puede cargar el archivo porque la ejecución de scripts está deshabilitada", abre PowerShell como administrador y corre:
 > ```powershell
 > Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 > ```
 > Después podrás activar el entorno normalmente.
 
-> **Nota para WSL:** WSL es un "Linux dentro de Windows". Todos los comandos de Linux funcionan
-> igual. Si no lo tienes instalado, abre PowerShell como administrador y corre `wsl --install`.
+> **Nota para WSL:** WSL es un "Linux dentro de Windows". Todos los comandos de Linux funcionan igual. Si no lo tienes instalado, abre PowerShell como administrador y corre `wsl --install`.
 
 ---
 
@@ -230,8 +187,7 @@ Con el entorno virtual **activo** (con el `(venv)` visible):
 pip install -r requirements.txt
 ```
 
-Esto descarga las herramientas que el proyecto necesita (pandas, streamlit, openpyxl, pytest).
-Solo se hace **una vez**.
+Esto descarga las herramientas que el proyecto necesita (pandas, streamlit, openpyxl, pytest). Solo se hace **una vez**.
 
 ---
 
@@ -258,8 +214,7 @@ Base lista en .../data/tramites.db
 streamlit run app.py
 ```
 
-Se abrirá automáticamente tu navegador en `http://localhost:8501`. Si no se abre, copia esa
-dirección y pégala manualmente.
+Se abrirá automáticamente tu navegador en `http://localhost:8501`. Si no se abre, copia esa dirección y pégala manualmente.
 
 **Para detener la página:** regresa a la terminal y presiona `Ctrl + C`.
 
@@ -284,70 +239,6 @@ Debe decir que las **40 pruebas pasaron**. Si algo falla, te dice exactamente qu
 
 ---
 
-## 📊 Qué vas a ver cuando corras todo
-
-Con los datos de prueba:
-
-- Se leyeron **1,633 filas**, se cargaron **1,591** (exactamente las correctas) y se rechazaron
-  **42 con su motivo** (40 duplicados, 1 fecha vacía, 1 fecha del año 2062).
-
-- El sistema detecta un **pico de 68 trámites el 27 de febrero de 2026** (cuando lo normal son
-  unos 12 al día) y explica que **60 de esos son de "Pago de predial" en la oficina Centro**.
-  Esto coincide con el cierre del descuento por pronto pago que se simuló.
-
----
-
-## 🧠 Decisiones importantes (y por qué)
-
-- **Duplicados:** cuando el mismo folio aparece dos veces, se queda con la versión que tiene
-  más datos completos. Si las dos versiones dicen cosas distintas (por ejemplo, fechas
-  diferentes), avisa para que un humano lo revise.
-
-- **Fechas ambiguas:** si una fecha es `04/03/2026`, se interpreta como **4 de marzo** (formato
-  día/mes/año, como se usa en México). Es una suposición que hay que confirmar con cada oficina.
-
-- **Encargados:** si el nombre viene incompleto o mal escrito, se marca como "Sin asignar",
-  pero **el trámite sí se cuenta**. No se pierde información.
-
-- **Privacidad:** el nombre del ciudadano **nunca se guarda en la base**. Solo se guarda un
-  código único (un "hash") que permite contar personas distintas sin saber quiénes son. Es
-  como darle a cada persona un número de folio secreto.
-
-- **Detección de días raros:** se usa un método llamado **IQR** en lugar del promedio normal,
-  porque un solo día con muchísimos trámites distorsionaría el promedio y el pico se
-  "escondería a sí mismo".
-
-- **Seguridad:** los filtros de la página web nunca escriben directamente lo que el usuario
-  teclea en la base de datos. Esto evita un tipo de hackeo llamado "inyección SQL".
-
----
-
-## ⚠️ Limitaciones (lo que este prototipo todavía no hace)
-
-- Es un **prototipo con datos inventados**. Las reglas (qué trámites existen, qué encargados hay)
-  son suposiciones y deben validarse con las personas que usan los Excel reales.
-
-- **SQLite es para un solo usuario a la vez.** Para que 50 personas lo usen al mismo tiempo
-  habría que migrar a PostgreSQL (otro tipo de base de datos) y agregar usuarios y contraseñas.
-
-- La "sal" que se usa para ocultar los nombres está escrita en el código. En producción debería
-  estar en una variable de entorno protegida.
-
-- **No está publicado en internet.** Solo corre en tu computadora.
-
-- Cada vez que corres el ETL, **borra y reconstruye toda la base**. No es incremental.
-
----
-
-## 🎯 Siguientes pasos
-
-1. Validar la lista de trámites y encargados con el equipo real.
-2. Hacer cargas incrementales (solo lo nuevo, no todo cada vez).
-3. Migrar a PostgreSQL con usuarios y contraseñas, y publicarlo en un servidor.
-4. Conectar herramientas de BI (como Power BI) a las mismas vistas para hacer dashboards.
-
----
-
 ## 📁 Estructura del proyecto
 
 ```
@@ -357,6 +248,7 @@ centralizador-tramites/
 ├── requirements.txt            ← Lista de programas que se instalan
 ├── README.md                   ← Este archivo
 ├── .gitignore                  ← Archivos que no se suben a GitHub
+├── LICENSE                     ← Licencia MIT
 │
 ├── data/
 │   ├── raw/                    ← Aquí van los Excel (entrada)
@@ -372,30 +264,149 @@ centralizador-tramites/
 │   ├── etl.py                  ← Limpia y carga los datos
 │   └── estadistica.py          ← Análisis estadístico
 │
-└── tests/
-    └── test_etl.py             ← 40 pruebas automáticas
+├── tests/
+│   └── test_etl.py             ← 40 pruebas automáticas
+│
+└── docs/
+    └── img/                    ← Capturas de pantalla
 ```
 
 ---
 
-## 🙋 Preguntas frecuentes
+## 🧠 Decisiones importantes (y por qué)
 
-**¿Necesito saber programar para usarlo?**
-Para instalarlo y correrlo, no. Solo copia y pega los comandos. Para modificarlo, sí necesitas
-aprender Python.
+- **Duplicados:** cuando el mismo folio aparece dos veces, se queda con la versión que tiene más datos completos. Si las dos versiones dicen cosas distintas (por ejemplo, fechas diferentes), avisa para que un humano lo revise.
 
-**¿Qué pasa si mi archivo de Excel tiene otro formato?**
-Es probable que funcione, porque el ETL detecta encabezados automáticamente. Si falla, revisa
-la pestaña **"Calidad de datos"** de la página web: ahí dice qué filas no se pudieron cargar y por qué.
+- **Fechas ambiguas:** si una fecha es `04/03/2026`, se interpreta como **4 de marzo** (formato día/mes/año, como se usa en México). Es una suposición que hay que confirmar con cada oficina.
 
-**¿Puedo usarlo con datos reales de mi oficina?**
-Sí, pero **antes de hacerlo** revisa los temas de privacidad y aviso de privacidad de datos
-personales. Este prototipo está diseñado para **no guardar nombres**, solo un hash.
+- **Encargados:** si el nombre viene incompleto o mal escrito, se marca como "Sin asignar", pero **el trámite sí se cuenta**. No se pierde información.
 
-**¿Por qué tanto código para algo "simple"?**
-Porque los datos del mundo real son sucios. El 70% del trabajo de un científico de datos es
-limpiar datos, no analizarlos. Este proyecto muestra cómo se hace bien.
+- **Privacidad:** el nombre del ciudadano **nunca se guarda en la base**. Solo se guarda un "hash" que permite contar personas distintas sin saber quiénes son.
 
+- **Detección de días raros:** se usa un método llamado **IQR** en lugar del promedio normal, porque un solo día con muchísimos trámites distorsionaría el promedio y el pico se "escondería a sí mismo".
+
+- **Seguridad:** los filtros de la página web nunca escriben directamente lo que el usuario teclea en la base de datos. Esto evita un tipo de hackeo llamado "inyección SQL".
+
+- **Secretos en producción:** la "sal" del hash se guarda como secreto en Streamlit Cloud (`TRAMITES_SAL`), nunca en el código.
+
+---
+
+## ⚠️ Limitaciones (lo que este prototipo todavía no hace)
+
+- Es un **prototipo con datos inventados**. Las reglas (qué trámites existen, qué encargados hay) son suposiciones y deben validarse con las personas que usan los Excel reales.
+
+- **SQLite es para un solo usuario a la vez.** Para que 50 personas lo usen al mismo tiempo habría que migrar a PostgreSQL (otro tipo de base de datos) y agregar usuarios y contraseñas.
+
+- **No hay autenticación.** La app es pública: cualquiera con el link puede verla. Para uso real habría que agregar login y roles.
+
+- **Cada vez que corres el ETL, borra y reconstruye toda la base.** No es incremental: si tuvieras millones de registros, tardaría mucho.
+
+- **La versión en la nube es de un solo proceso.** Si mucha gente entra al mismo tiempo, Streamlit Cloud puede tardar en responder.
+
+---
+
+## 🎯 Siguientes pasos
+
+1. Validar la lista de trámites y encargados con el equipo real.
+2. Hacer cargas incrementales (solo lo nuevo, no todo cada vez).
+3. Migrar a PostgreSQL con usuarios y contraseñas, y desplegar en un servidor propio.
+4. Agregar autenticación y roles a la app.
+5. Conectar herramientas de BI (como Power BI o Metabase) a las mismas vistas.
+
+---
+
+## 🧠 Antes de empezar: glosario para no técnicos
+
+Si nunca has programado, esta sección es para ti. Aquí explico las palabras raras que van a aparecer más adelante, con ejemplos cotidianos.
+
+### ¿Qué es un "ETL"?
+Son las siglas de **Extract, Transform, Load** (Extraer, Transformar, Cargar). Es como lavar ropa:
+
+1. **Extraer** → agarras la ropa sucia del cesto (leer los Excel).
+2. **Transformar** → la lavas, la secas y la doblas (limpiar y ordenar los datos).
+3. **Cargar** → la guardas en el clóset (meter todo a una base de datos limpia).
+
+Es el proceso que hace este proyecto: agarra los Excel sucios y los deja impecables en un solo lugar.
+
+### ¿Qué es "SQL"?
+Es el idioma que hablan las **bases de datos**. Una base de datos es como un archivador gigante con cajones y carpetas. SQL es el idioma que usas para pedirle cosas:
+
+- *"Dame todos los trámites de marzo"*
+- *"¿Cuántos trámites hizo Ana López?"*
+- *"¿Qué día hubo más trabajo?"*
+
+En este proyecto, **tú no necesitas escribir SQL**: la página web ya trae los filtros listos.
+
+### ¿Qué es "SQLite"?
+Es un **tipo de base de datos muy ligera**, que vive en un solo archivo (como un Excel, pero más poderoso). Es perfecta para proyectos pequeños. El archivo se llama `tramites.db` y se genera solo cuando corres el ETL.
+
+### ¿Qué es "3FN" (Tercera Forma Normal)?
+Es una regla que dice: **cada dato vive en un solo lugar**. Si tienes que cambiarlo en varios
+lados, no estás en 3FN.
+
+**Ejemplo — una agenda de contactos:**
+
+❌ **Sin 3FN:** repites la ciudad en cada renglón.
+```
+Nombre | Teléfono | Ciudad
+Ana    | 555-1234 | CDMX
+Luis   | 555-5678 | CDMX
+Sofía  | 555-9012 | CDMX
+```
+Si mañana "CDMX" cambia de nombre, tienes que editar **3 renglones**. Y si te equivocas en
+uno, ya hay datos inconsistentes.
+
+✅ **Con 3FN:** separas en dos tablitas y solo guardas el número.
+```
+Tabla "Ciudades"       Tabla "Contactos"
+id | ciudad            Nombre | Teléfono | id_ciudad
+1  | CDMX              Ana    | 555-1234 | 1
+                       Luis   | 555-5678 | 1
+                       Sofía  | 555-9012 | 1
+```
+"CDMX" se escribe **1 sola vez**. Si cambia, lo cambias en un solo lugar y se actualiza en
+todos lados. Además, es imposible que alguien escriba "CDMX" de 5 formas distintas.
+
+**En este proyecto**, los nombres de trámites, encargados y oficinas viven en tablitas
+aparte (`tramite_tipo`, `encargado`, `oficina`). En la tabla grande (`registro`) solo se
+guardan sus números. Por eso el ETL se esfuerza tanto en normalizar los nombres: para que
+solo exista la versión oficial. 🐍
+
+### ¿Qué es una "interfaz web"?
+Es una **página web** que abres en tu navegador (Chrome, Safari, Edge) y con la que interactúas haciendo clic. Como cuando entras a tu banco en línea: llenas filtros, ves gráficas, descargas reportes. No necesitas saber nada de tecnología para usarla.
+
+### ¿Qué es "Streamlit"?
+Es una **herramienta de Python para hacer páginas web sin saber diseño**. En lugar de aprender HTML, CSS y JavaScript (los idiomas de las páginas web), escribes Python normal y Streamlit te arma la página con botones, tablas y gráficas automáticamente.
+
+En este proyecto, `app.py` es el archivo que describe la página, y Streamlit la "dibuja" cuando lo ejecutas.
+
+### ¿Qué es un "entorno virtual"?
+Imagina que tu computadora es una casa y los programas de Python son muebles. Si instalas programas sin orden, la casa se llena de cosas que no usas y puede haber conflictos.
+
+Un **entorno virtual** es como una **cajita aparte** dentro de la casa donde guardas solo los muebles (programas) que este proyecto necesita. Así:
+
+- No ensucias el resto de tu computadora.
+- Si otro proyecto necesita otra versión, no se pelean.
+- Si algo se rompe, borras la cajita y empiezas de nuevo sin afectar nada más.
+
+Se crea con el comando `python -m venv venv`.
+
+### ¿Qué es "GitHub"?
+Es como un **Google Drive para programadores**. Sirve para guardar tu código, ver quién cambió qué, y compartirlo con el mundo. Cada proyecto vive en un "repositorio".
+
+### ¿Qué es "pytest"?
+Es una herramienta que **revisa que tu programa funcione bien**. Tú escribes pruebas (por ejemplo: *"si le doy esta fecha, debe devolver este resultado"*) y pytest las corre todas automáticamente. Es como tener un inspector de calidad.
+
+### ¿Qué es un "hash"?
+Es una **licuadora de texto**: metes un nombre y sale una combinación sin sentido (ej. `María García` → `a3f7c9e1b2d4`). Tiene 3 propiedades:
+
+1. **Siempre da lo mismo** → el mismo nombre siempre produce la misma mezcla.
+2. **No se puede regresar** → de la mezcla no puedes recuperar el nombre.
+3. **Cada nombre da algo distinto** → dos personas nunca comparten mezcla.
+
+**¿Para qué sirve aquí?** Para **contar personas distintas sin saber quiénes son**. Si 5 trámites tienen el mismo hash, son la misma persona (sin saber su nombre).
+
+**¿Y la "sal"?** Es un **ingrediente secreto** que se agrega antes de licuar, para que nadie pueda adivinar el nombre probando combinaciones comunes. En producción esa sal debe guardarse en una variable de entorno (`TRAMITES_SAL`) y mantenerse en secreto.
 
 ---
 
@@ -418,6 +429,25 @@ Guarda esta tablita a la mano:
 
 ---
 
+## 🙋 Preguntas frecuentes
+
+**¿Necesito saber programar para usarlo?**
+Para instalarlo y correrlo, no. Solo copia y pega los comandos. Para modificarlo, sí necesitas aprender Python.
+
+**¿Qué pasa si mi archivo de Excel tiene otro formato?**
+Es probable que funcione, porque el ETL detecta encabezados automáticamente. Si falla, revisa la pestaña **"Calidad de datos"** de la página web: ahí dice qué filas no se pudieron cargar y por qué.
+
+**¿Puedo usarlo con datos reales de mi oficina?**
+Sí, pero **antes de hacerlo** revisa los temas de privacidad y aviso de privacidad de datos personales. Este prototipo está diseñado para **no guardar nombres**, solo un hash.
+
+**¿Por qué tanto código para algo "simple"?**
+Porque los datos del mundo real son sucios. El 70% del trabajo de un científico de datos es limpiar datos, no analizarlos. Este proyecto muestra cómo se hace bien.
+
+**¿Cómo se despliega la app en la nube?**
+Con [Streamlit Community Cloud](https://share.streamlit.io/), gratis. Solo conectas tu repositorio de GitHub, eliges `app.py` como archivo principal y configuras los secretos. La app se actualiza automáticamente con cada `git push`.
+
+---
+
 ## ✅ Resumen en 30 segundos
 
 1. Instala Python.
@@ -428,5 +458,14 @@ Guarda esta tablita a la mano:
 6. Abre la página con `streamlit run app.py`.
 7. ¡Listo! Filtra, grafica y descarga.
 
-Con esto, cualquier persona sin conocimientos técnicos puede entender **qué hace** el proyecto,
-**por qué** lo hace, y **cómo** usarlo en su computadora, ya sea Windows, Mac, Linux o WSL. 🚀
+---
+
+## 📄 Licencia
+
+MIT — ver [LICENSE](LICENSE) para más detalles.
+
+---
+
+<p align="center">
+  Hecho con ☕ y 🐍 por <a href="https://github.com/CeYaGlez">Cesar Yahir González</a>
+</p>
